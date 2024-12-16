@@ -5,6 +5,7 @@ function Navbar() {
     const navigate = useNavigate()
     const handleLogout = () =>{
     localStorage.removeItem("accessToken");
+
     alert("You have been logged out successfully.");
         navigate("/login");  
       };
