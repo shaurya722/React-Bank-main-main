@@ -3,7 +3,7 @@ import axios from "axios";
 
 function Transactions() {
   const [accounts, setAccounts] = useState([]);
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState([]); // Default as an empty array
   const [selectedAccountFrom, setSelectedAccountFrom] = useState("");
   const [selectedAccountTo, setSelectedAccountTo] = useState("");
   const [selectedBankFrom, setSelectedBankFrom] = useState("");
@@ -16,7 +16,7 @@ function Transactions() {
   const API_ACCOUNTS = "http://localhost:8000/home/accounts/"; // API endpoint to fetch accounts
   const API_TRANSACTION = "http://localhost:8000/home/transactions/"; // API endpoint for transactions
 
-  // Fetch accounts from API
+  // Fetch accounts and transactions from API
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
@@ -24,6 +24,7 @@ function Transactions() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAccounts(res.data); // Storing accounts data
+        console.log('account:',res.data);
       } catch (err) {
         console.error("Error fetching accounts:", err.response?.data || err.message);
       }
@@ -34,14 +35,13 @@ function Transactions() {
         const res = await axios.get(API_TRANSACTION, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Transactions fetched:", res.data); 
-        
-        setTransactions(res.data.transactions); 
+        setTransactions(res.data);
+        console.log('trnsactions:',res.data); // Set transactions directly to the response data
       } catch (err) {
         console.error("Error fetching transactions:", err.response?.data || err.message);
       }
     };
-    
+
     fetchAccounts();
     fetchTransactions();
   }, [token]);
@@ -74,8 +74,13 @@ function Transactions() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Transaction created:", res.data);
       alert("Transaction successful!");
+
+      // Refresh transactions
+      const updatedTransactions = await axios.get(API_TRANSACTION, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTransactions(updatedTransactions.data);
     } catch (err) {
       console.error("Error creating transaction:", err.response?.data || err.message);
       alert("Transaction failed. Please try again.");
@@ -83,7 +88,7 @@ function Transactions() {
   };
 
   // Extract unique bank names
-  const banks = [...new Set(accounts.map(account => account.bank))];
+  const banks = [...new Set(accounts.map((account) => account.bank))];
 
   return (
     <>
@@ -204,32 +209,42 @@ function Transactions() {
       </div>
 
       <h2>Recent Transactions</h2>
-{transactions.length > 0 ? (
-  <table>
-    <thead>
-      <tr>
-        <th>From Account</th>
-        <th>To Account</th>
-        <th>Amount</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {transactions.map((transaction, index) => (
-        <tr key={index}>
-          <td>{transaction.account_from}</td>
-          <td>{transaction.account_to}</td>
-          <td>{transaction.amount}</td>
-          <td>{new Date(transaction.transaction_date).toLocaleString()}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-) : (
-  <p>No transactions found.</p>
-)}
-
-
+      {transactions && transactions.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>From Account</th>
+              <th>To Account</th>
+              <th>Amount</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((transaction, index) => {
+              const accountFrom = accounts.find((acc) => acc.id === transaction.account_from);
+              const accountTo = accounts.find((acc) => acc.id === transaction.account_to);
+              return (
+                <tr key={index}>
+                  <td>
+                    {accountFrom
+                      ? `${accountFrom.account_type} - ${accountFrom.balance} (${accountFrom.bank})`
+                      : transaction.account_from}
+                  </td>
+                  <td>
+                    {accountTo
+                      ? `${accountTo.account_type} - ${accountTo.balance} (${accountTo.bank})`
+                      : transaction.account_to}
+                  </td>
+                  <td>{transaction.amount}</td>
+                  <td>{new Date(transaction.transaction_date).toLocaleString()}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <p>No transactions found.</p>
+      )}
     </>
   );
 }
