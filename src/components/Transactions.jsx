@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
+import Tran_data from './Tran_data'
 import axios from "axios";
 
 function Transactions() {
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]); // Default as an empty array
   const [selectedAccountFrom, setSelectedAccountFrom] = useState("");
-  const [selectedAccountTo, setSelectedAccountTo] = useState("");
+  const [accountTo, setAccountTo] = useState("");
   const [selectedBankFrom, setSelectedBankFrom] = useState("");
-  const [selectedBankTo, setSelectedBankTo] = useState("");
+  const [bankTo, setBankTo] = useState("");
   const [amount, setAmount] = useState("");
   const [paymentOption, setPaymentOption] = useState("Transfer Now");
   const [time, setTime] = useState("");
@@ -47,45 +48,56 @@ function Transactions() {
   }, [token]);
 
   // Handle transaction submission
-  const handleTransfer = async () => {
-    if (!selectedAccountFrom || !selectedBankFrom || !selectedAccountTo || !selectedBankTo || !amount) {
-      alert("All fields are required.");
-      return;
-    }
+// Handle transaction submission
+const handleTransfer = async () => {
+  if (!selectedAccountFrom || !selectedBankFrom || !accountTo || !bankTo || !amount) {
+    alert("All fields are required.");
+    return;
+  }
 
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid amount.");
-      return;
-    }
+  if (isNaN(amount) || amount <= 0) {
+    alert("Please enter a valid amount.");
+    return;
+  }
 
-    try {
-      const res = await axios.post(
-        API_TRANSACTION,
-        {
-          account_from: selectedAccountFrom,
-          bank_from: selectedBankFrom,
-          account_to: selectedAccountTo,
-          bank_to: selectedBankTo,
-          amount: amount,
-          time: paymentOption === "Schedule Payment" ? time : null, // Only send time if scheduling
-          payment_option: paymentOption,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert("Transaction successful!");
+  // Validate that `accountTo` and `bankTo` exist in the accounts
+  // const recipientAccount = accounts.find(
+  //   (acc) => acc.id === parseInt(accountTo) && acc.bank === bankTo
+  // );
 
-      // Refresh transactions
-      const updatedTransactions = await axios.get(API_TRANSACTION, {
+  // if (!recipientAccount) {
+  //   alert("Recipient account or bank does not exist. Please check your inputs.");
+  //   return;
+  // }
+
+  try {
+    const res = await axios.post(
+      API_TRANSACTION,
+      {
+        account_from: selectedAccountFrom,
+        bank_from: selectedBankFrom,
+        account_to: accountTo,
+        bank_to: bankTo,
+        amount: amount,
+        time: paymentOption === "Schedule Payment" ? time : null, // Only send time if scheduling
+        payment_option: paymentOption,
+      },
+      {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      setTransactions(updatedTransactions.data);
-    } catch (err) {
-      console.error("Error creating transaction:", err.response?.data || err.message);
-      alert("Transaction failed. Please try again.");
-    }
-  };
+      }
+    );
+    alert("Transaction successful!");
+
+    // Refresh transactions
+    const updatedTransactions = await axios.get(API_TRANSACTION, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setTransactions(updatedTransactions.data);
+  } catch (err) {
+    console.error("Error creating transaction:", err.response?.data || err.message);
+    alert("Transaction failed. Please try again.");
+  }
+};
 
   // Extract unique bank names
   const banks = [...new Set(accounts.map((account) => account.bank))];
@@ -133,37 +145,23 @@ function Transactions() {
       {/* Recipient Bank */}
       <div>
         <label htmlFor="bank_to">To Bank:</label>
-        <select
+        <input
           id="bank_to"
-          value={selectedBankTo}
-          onChange={(e) => setSelectedBankTo(e.target.value)}
-        >
-          <option value="">Select Bank</option>
-          {banks.map((bank, index) => (
-            <option key={index} value={bank}>
-              {bank}
-            </option>
-          ))}
-        </select>
+          type="bank_to"
+          value={bankTo}
+          onChange={(e) => setBankTo(e.target.value)}
+        />
       </div>
 
       {/* Recipient Account */}
       <div>
         <label htmlFor="account_to">To Account:</label>
-        <select
+        <input
           id="account_to"
-          value={selectedAccountTo}
-          onChange={(e) => setSelectedAccountTo(e.target.value)}
-        >
-          <option value="">Select Account</option>
-          {accounts
-            .filter((account) => account.bank === selectedBankTo)
-            .map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.account_type} - {account.balance} ({account.bank})
-              </option>
-            ))}
-        </select>
+          type="account_to"
+          value={accountTo}
+          onChange={(e) => setAccountTo(e.target.value)}
+        />
       </div>
 
       {/* Amount */}
@@ -208,43 +206,44 @@ function Transactions() {
         <button onClick={handleTransfer}>Transfer</button>
       </div>
 
-      <h2>Recent Transactions</h2>
-      {transactions && transactions.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>From Account</th>
-              <th>To Account</th>
-              <th>Amount</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction, index) => {
-              const accountFrom = accounts.find((acc) => acc.id === transaction.account_from);
-              const accountTo = accounts.find((acc) => acc.id === transaction.account_to);
-              return (
-                <tr key={index}>
-                  <td>
-                    {accountFrom
-                      ? `${accountFrom.account_type} - ${accountFrom.balance} (${accountFrom.bank})`
-                      : transaction.account_from}
-                  </td>
-                  <td>
-                    {accountTo
-                      ? `${accountTo.account_type} - ${accountTo.balance} (${accountTo.bank})`
-                      : transaction.account_to}
-                  </td>
-                  <td>{transaction.amount}</td>
-                  <td>{new Date(transaction.transaction_date).toLocaleString()}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <p>No transactions found.</p>
-      )}
+      {/* <h2>Recent Transactions</h2>
+{transactions && transactions.length > 0 ? (
+  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+    <thead>
+      <tr>
+        <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}>From Account</th>
+        <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}>To Account</th>
+        <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}>Amount</th>
+        <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {transactions.map((transaction, index) => {
+        const accountFrom = accounts.find((acc) => acc.id === transaction.account_from);
+        const accountTo = accounts.find((acc) => acc.id === transaction.account_to);
+        return (
+          <tr key={index}>
+            <td style={{ padding: "8px" }}>
+              {accountFrom
+                ? `${accountFrom.account_type} - ${accountFrom.balance} (${accountFrom.bank})`
+                : transaction.account_from}
+            </td>
+            <td style={{ padding: "8px" }}>
+              {accountTo
+                ? `${accountTo.account_type} - ${accountTo.balance} (${accountTo.bank})`
+                : transaction.account_to}
+            </td>
+            <td style={{ padding: "8px" }}>{transaction.amount}</td>
+            <td style={{ padding: "8px" }}>{transaction.transaction_date}</td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+) : (
+  <p>No transactions found.</p>
+)} */}
+<Tran_data/>
     </>
   );
 }

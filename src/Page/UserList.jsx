@@ -1,12 +1,29 @@
-// UserList.js
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({ email: '', first_name: '', last_name: '', username: '', password: '', is_active: true, is_staff: false, is_verified: false });
+  const [newUser, setNewUser] = useState({
+    email: "",
+    first_name: "",
+    last_name: "",
+    username: "",
+    password: "",
+    is_active: true,
+    is_staff: false,
+    is_verified: false,
+  });
   const [editUserId, setEditUserId] = useState(null);
-  const [editUser, setEditUser] = useState({ email: '', first_name: '', last_name: '', username: '', password: '', is_active: true, is_staff: false, is_verified: false });
+  const [editUser, setEditUser] = useState({
+    email: "",
+    first_name: "",
+    last_name: "",
+    username: "",
+    password: "",
+    is_active: true,
+    is_staff: false,
+    is_verified: false,
+  });
 
   const API = "http://localhost:8000/api/users/";
   const token = localStorage.getItem("accessToken");
@@ -22,7 +39,6 @@ const UserList = () => {
         });
         setUsers(res.data);
         console.log(res.data);
-        
       } catch (err) {
         console.error("Error fetching users:", err);
       }
@@ -40,7 +56,16 @@ const UserList = () => {
         },
       });
       setUsers([...users, res.data]);
-      setNewUser({ email: '', first_name: '', last_name: '', username: '', password: '', is_active: true, is_staff: false, is_verified: false }); // Reset form
+      setNewUser({
+        email: "",
+        first_name: "",
+        last_name: "",
+        username: "",
+        password: "",
+        is_active: true,
+        is_staff: false,
+        is_verified: false,
+      }); // Reset form
     } catch (err) {
       console.error("Error creating user:", err);
     }
@@ -54,7 +79,7 @@ const UserList = () => {
       first_name: user.first_name,
       last_name: user.last_name,
       username: user.username,
-      password: '', // Do not pre-fill password
+      password: "",
       is_active: user.is_active,
       is_staff: user.is_staff,
       is_verified: user.is_verified,
@@ -68,9 +93,18 @@ const UserList = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUsers(users.map(user => (user.id === editUserId ? res.data : user)));
+      setUsers(users.map((user) => (user.id === editUserId ? res.data : user)));
       setEditUserId(null);
-      setEditUser({ email: '', first_name: '', last_name: '', username: '', password: '', is_active: true, is_staff: false, is_verified: false }); // Reset form
+      setEditUser({
+        email: "",
+        first_name: "",
+        last_name: "",
+        username: "",
+        password: "",
+        is_active: true,
+        is_staff: false,
+        is_verified: false,
+      }); // Reset form
     } catch (err) {
       console.error("Error updating user:", err);
     }
@@ -84,7 +118,7 @@ const UserList = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUsers(users.filter(user => user.id !== id));
+      setUsers(users.filter((user) => user.id !== id));
     } catch (err) {
       console.error("Error deleting user:", err);
     }
@@ -154,74 +188,98 @@ const UserList = () => {
         <button onClick={handleCreateUser}>Create</button>
       </div>
 
-      {/* User List */}
-      <ul>
-        {users.map(user => (
-          <li key={user.id}>
-            {editUserId === user.id ? (
-              <>
-                <input
-                  type="email"
-                  value={editUser.email}
-                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
-                />
-                <input
-                  type="text"
-                  value={editUser.first_name}
-                  onChange={(e) => setEditUser({ ...editUser, first_name: e.target.value })}
-                />
-                <input
-                  type="text"
-                  value={editUser.last_name}
-                  onChange={(e) => setEditUser({ ...editUser, last_name: e.target.value })}
-                />
-                <input
-                  type="text"
-                  value={editUser.username}
-                  onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="Password (leave blank to keep unchanged)"
-                  onChange={(e) => setEditUser({ ...editUser, password: e.target.value })}
-                />
-                <label>
-                  Active:
-                  <input
-                    type="checkbox"
-                    checked={editUser.is_active}
-                    onChange={(e) => setEditUser({ ...editUser, is_active: e.target.checked })}
-                  />
-                </label>
-                <label>
-                  Staff:
-                  <input
-                    type="checkbox"
-                    checked={editUser.is_staff}
-                    onChange={(e) => setEditUser({ ...editUser, is_staff: e.target.checked })}
-                  />
-                </label>
-                <label>
-                  Verified:
-                  <input
-                    type="checkbox"
-                    checked={editUser.is_verified}
-                    onChange={(e) => setEditUser({ ...editUser, is_verified: e.target.checked })}
-                  />
-                </label>
-                <button onClick={handleUpdateUser}>Save</button>
-                <button onClick={() => setEditUserId(null)}>Cancel</button>
-              </>
-            ) : (
-              <>
-                {user.email} - {user.first_name} {user.last_name} (Username: {user.username}, Active: {user.is_active ? 'Yes' : 'No'}, Staff: {user.is_staff ? 'Yes' : 'No'}, Verified: {user.is_verified ? 'Yes' : 'No'})
-                <button onClick={() => handleEditUser(user)}>Edit</button>
-                <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      {/* User Table */}
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Username</th>
+            <th>Active</th>
+            <th>Staff</th>
+            <th>Verified</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id}>
+              {editUserId === user.id ? (
+                <>
+                  <td>
+                    <input
+                      type="email"
+                      value={editUser.email}
+                      onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.first_name}
+                      onChange={(e) => setEditUser({ ...editUser, first_name: e.target.value })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.last_name}
+                      onChange={(e) => setEditUser({ ...editUser, last_name: e.target.value })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.username}
+                      onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={editUser.is_active}
+                      onChange={(e) => setEditUser({ ...editUser, is_active: e.target.checked })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={editUser.is_staff}
+                      onChange={(e) => setEditUser({ ...editUser, is_staff: e.target.checked })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={editUser.is_verified}
+                      onChange={(e) => setEditUser({ ...editUser, is_verified: e.target.checked })}
+                    />
+                  </td>
+                  <td>
+                    <button onClick={handleUpdateUser}>Save</button>
+                    <button onClick={() => setEditUserId(null)}>Cancel</button>
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td>{user.email}</td>
+                  <td>{user.first_name}</td>
+                  <td>{user.last_name}</td>
+                  <td>{user.username}</td>
+                  <td>{user.is_active ? "Yes" : "No"}</td>
+                  <td>{user.is_staff ? "Yes" : "No"}</td>
+                  <td>{user.is_verified ? "Yes" : "No"}</td>
+                  <td>
+                    <button onClick={() => handleEditUser(user)}>Edit</button>
+                    <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                  </td>
+                </>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
