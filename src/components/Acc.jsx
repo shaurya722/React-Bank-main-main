@@ -15,7 +15,7 @@ const AccountsTable = () => {
     bank: "",
   });
 
-  const API = "http://localhost:8000/api/accounts/"; // Replace with your API endpoint
+  const API = "http://localhost:8000/home/accounts/"; // Replace with your API endpoint
   const token = localStorage.getItem("accessToken");
 
   // Fetch Accounts
@@ -28,6 +28,7 @@ const AccountsTable = () => {
           },
         });
         setAccounts(res.data);
+        console.log(res.data);
       } catch (err) {
         console.error("Error fetching accounts:", err);
       }

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 function AccountsTable() {
   const [accounts, setAccounts] = useState([]);
@@ -15,7 +17,7 @@ function AccountsTable() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAccounts(response.data);
-        console.log('trna_data:',response.data);
+        console.log("trna_data:", response.data);
       } catch (error) {
         console.error("Error fetching accounts data:", error.response?.data || error.message);
       }
@@ -24,9 +26,43 @@ function AccountsTable() {
     fetchAccountsData();
   }, [token]);
 
+  // Generate PDF for transactions
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Transactions Report", 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    accounts.forEach((account, index) => {
+      if (account.transactions && account.transactions.length > 0) {
+        doc.setFontSize(14);
+        doc.text(`Account ID: ${account.id} (${account.account_type})`, 14, 40 + index * 80);
+
+        const transactionsData = account.transactions.map((transaction) => [
+          transaction.account_from,
+          transaction.account_to,
+          transaction.amount,
+          new Date(transaction.transaction_date).toLocaleString(),
+        ]);
+
+        doc.autoTable({
+          head: [["From Account", "To Account", "Amount", "Transaction Date"]],
+          body: transactionsData,
+          startY: 45 + index * 80,
+        });
+      }
+    });
+
+    doc.save("Transactions_Report.pdf");
+  };
+
   return (
     <div>
       <h2>Accounts and Transactions</h2>
+      <button onClick={generatePDF} style={{ marginBottom: "20px", padding: "10px 15px", cursor: "pointer" }}>
+        Download Transactions PDF
+      </button>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
