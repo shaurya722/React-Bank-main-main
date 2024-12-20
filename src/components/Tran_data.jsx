@@ -88,6 +88,12 @@ function AccountsTable() {
                     <thead>
                       <tr>
                         <th style={{ border: "1px solid #ddd", padding: "4px", textAlign: "left" }}>
+                          Transaction ID
+                        </th>
+                        <th style={{ border: "1px solid #ddd", padding: "4px", textAlign: "left" }}>
+                          Transaction Type
+                        </th>
+                        <th style={{ border: "1px solid #ddd", padding: "4px", textAlign: "left" }}>
                           From Account
                         </th>
                         <th style={{ border: "1px solid #ddd", padding: "4px", textAlign: "left" }}>
@@ -104,6 +110,8 @@ function AccountsTable() {
                     <tbody>
                       {account.transactions.map((transaction) => (
                         <tr key={transaction.id}>
+                          <td style={{ padding: "4px" }}>{transaction.id}</td>
+                          <td style={{ padding: "4px" }}>Credited</td>
                           <td style={{ padding: "4px" }}>{transaction.account_from}</td>
                           <td style={{ padding: "4px" }}>{transaction.account_to}</td>
                           <td style={{ padding: "4px" }}>{transaction.amount}</td>
